@@ -38,16 +38,16 @@ func PlayGame() {
 	ownBoard := false
 	gameMode := "single"
 
-	gameinfo := GameInfo{gameStarter(gameMode, ownBoard, playerInfo)}
+	gameInfo := GameInfo{gameStarter(gameMode, ownBoard, playerInfo)}
 
 	if !ownBoard {
-		playerInfo.coords = httpClient.GetBoard(gameinfo.AuthToken)
+		playerInfo.coords = httpClient.GetBoard(gameInfo.AuthToken)
 	}
 
-	fmt.Println(gameinfo)
+	fmt.Println(gameInfo)
 	fmt.Println("--------------------------------------------")
 
-	tempInfo := httpClient.GetOpponentInfo(gameinfo.AuthToken)
+	tempInfo := httpClient.GetOpponentInfo(gameInfo.AuthToken)
 
 	opponentInfo := OpponentInfo{
 		nickname: tempInfo[0],
@@ -58,27 +58,48 @@ func PlayGame() {
 
 	ui := gui.NewGUI(true)
 
-	txt := gui.NewText(1, 1, "Press on any coordinate to shot it.", nil)
+	timer := gui.NewText(42, 1, "Game will start soon.", nil)
+	txt := gui.NewText(30, 3, "Press on any coordinate to shot it.", nil)
+	turn := gui.NewText(30, 5, "Waiting for game to start", nil)
+	opponentBoard := gui.NewBoard(1, 11, nil)
+	playerBoard := gui.NewBoard(50, 11, nil)
+
 	ui.Draw(txt)
-	ui.Draw(gui.NewText(1, 2, "Press Ctrl+C to exit", nil))
-
-	opponentBoard := gui.NewBoard(1, 4, nil)
+	ui.Draw(timer)
+	ui.Draw(turn)
+	ui.Draw(gui.NewText(37, 40, "Press Ctrl+C to exit", nil))
 	ui.Draw(opponentBoard)
-	playerBoard := gui.NewBoard(50, 4, nil)
 	ui.Draw(playerBoard)
-
-	ui.Draw(gui.NewText(1, 26, opponentInfo.desc, nil))
-	ui.Draw(gui.NewText(50, 26, playerInfo.desc, nil))
+	ui.Draw(gui.NewText(1, 8, opponentInfo.nickname, nil))
+	ui.Draw(gui.NewText(50, 8, playerInfo.nickname, nil))
+	ui.Draw(gui.NewText(1, 35, opponentInfo.desc, nil))
+	ui.Draw(gui.NewText(50, 35, playerInfo.desc, nil))
 
 	go func() {
 		for {
-			boardsUpdater(gameinfo.AuthToken, playerInfo, playerBoard, opponentBoard)
 			char := opponentBoard.Listen(context.TODO())
-			if canFire(gameinfo.AuthToken) {
-				fireResult := fire(char, gameinfo.AuthToken, &playerInfo)
+			if canFire(gameInfo.AuthToken) {
+				fireResult := fire(char, gameInfo.AuthToken, &playerInfo)
 				txt.SetText(fmt.Sprintf("Fired at Coordinates: %s. %s!!!", char, fireResult))
+				boardsUpdater(gameInfo.AuthToken, playerInfo, playerBoard, opponentBoard)
 			} else {
 				txt.SetText("Wait for your turn!")
+			}
+		}
+	}()
+
+	go func() {
+		for {
+			time.Sleep(300 * time.Millisecond)
+			status := boardsUpdater(gameInfo.AuthToken, playerInfo, playerBoard, opponentBoard)
+			timer.SetText(fmt.Sprintf("Timer: %d", status.Timer))
+			if status.ShouldFire {
+				turn.SetText(fmt.Sprintf("Turn of: %s", status.Nick))
+			} else {
+				turn.SetText(fmt.Sprintf("Turn of: %s", status.Opponent))
+			}
+			if status.GameStatus == "ended" {
+				return
 			}
 		}
 	}()
@@ -95,10 +116,10 @@ func gameStarter(gameMode string, ownBoard bool, playerInfo PlayerInfo) string {
 	switch gameMode {
 	case "single":
 		token = httpClient.StartGameWithBot(playerInfo.nickname, playerInfo.desc, playerInfo.coords)
-		time.Sleep(3 * time.Second)
+		time.Sleep(1 * time.Second)
 	case "multiplayer":
 		token = httpClient.StartGameMulti(playerInfo.nickname, playerInfo.desc, playerInfo.coords, "Ktos")
-		time.Sleep(3 * time.Second)
+		time.Sleep(1 * time.Second)
 	default:
 		token = ""
 	}
@@ -111,20 +132,21 @@ func gameStarter(gameMode string, ownBoard bool, playerInfo PlayerInfo) string {
 
 func cordToNumbers(cord string) []int {
 	numbers := []int{0, 0}
+
 	numbers[0] = int(cord[0]) - 65
 	numbers[1] = int(cord[1]) - 49
 
 	return numbers
 }
 
-func playerBoardStatusUpdate(board *gui.Board, cords []string, oppCords []string) {
+func playerBoardStatusUpdate(board *gui.Board, plyCords []string, oppCords []string) {
 	states := [10][10]gui.State{}
-	for _, ply := range cords {
+	for _, ply := range plyCords {
 		numbers := cordToNumbers(ply)
 		states[numbers[0]][numbers[1]] = gui.Ship
 	}
 	for _, opp := range oppCords {
-		if stringInSlice(opp, cords) {
+		if stringInSlice(opp, plyCords) {
 			numbers := cordToNumbers(opp)
 			states[numbers[0]][numbers[1]] = gui.Hit
 		} else {
@@ -157,10 +179,11 @@ func stringInSlice(a string, list []string) bool {
 	return false
 }
 
-func boardsUpdater(authKey string, playerInfo PlayerInfo, plyBoard *gui.Board, oppBoard *gui.Board) {
+func boardsUpdater(authKey string, playerInfo PlayerInfo, plyBoard *gui.Board, oppBoard *gui.Board) httpClient.Status {
 	status := httpClient.GetStatus(authKey)
 	playerBoardStatusUpdate(plyBoard, playerInfo.coords, status.OppShots)
 	opponentBoardStatusUpdate(oppBoard, playerInfo.hitCoords, playerInfo.missCoords)
+	return status
 }
 
 func fire(cord string, authKey string, playerInfo *PlayerInfo) string {
