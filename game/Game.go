@@ -11,6 +11,7 @@ import (
 type PlayerInfo struct {
 	nickname   string
 	desc       string
+	ownBoard   bool
 	coords     []string
 	hitCoords  []string
 	missCoords []string
@@ -25,22 +26,14 @@ type GameInfo struct {
 	AuthToken string
 }
 
-func PlayGame() {
-	playerInfo := PlayerInfo{
-		nickname: "Yuki",
-		desc:     "Snow",
-		coords: []string{"A1", "A3", "B9", "C7", "D1",
-			"D2", "D3", "D4", "D7", "E7",
-			"F1", "F2", "F3", "F5", "G5",
-			"G8", "G9", "I4", "J4", "J8"},
-	}
+func StartGame(game ShipsGame) {
+	playerInfo := game.PlayerInfo
 
-	ownBoard := false
 	gameMode := "single"
 
-	gameInfo := GameInfo{gameStarter(gameMode, ownBoard, playerInfo)}
+	gameInfo := GameInfo{gameStarter(gameMode, playerInfo.ownBoard, playerInfo)}
 
-	if !ownBoard {
+	if !playerInfo.ownBoard {
 		playerInfo.coords = httpClient.GetBoard(gameInfo.AuthToken)
 	}
 
@@ -60,7 +53,7 @@ func PlayGame() {
 
 	timer := gui.NewText(42, 1, "Game will start soon.", nil)
 	txt := gui.NewText(30, 3, "Press on any coordinate to shot it.", nil)
-	turn := gui.NewText(30, 5, "Waiting for game to start", nil)
+	turn := gui.NewText(40, 5, "Waiting for game to start", nil)
 	opponentBoard := gui.NewBoard(1, 11, nil)
 	playerBoard := gui.NewBoard(50, 11, nil)
 

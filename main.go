@@ -1,7 +1,9 @@
 package main
 
-import "StatkiBasic/game"
+import (
+	"StatkiBasic/game"
+)
 
 func main() {
-	game.PlayGame()
+	game.NewGame()
 }
