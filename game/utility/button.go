@@ -11,7 +11,7 @@ type button struct {
 	ch    chan string
 }
 
-func NewButton(rec *tl.Rectangle) *button {
+func NewRectangle(rec *tl.Rectangle) *button {
 	return &button{Rectangle: rec}
 }
 

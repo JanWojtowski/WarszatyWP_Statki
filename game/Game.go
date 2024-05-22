@@ -4,7 +4,8 @@ import (
 	"StatkiBasic/httpClient"
 	"context"
 	"fmt"
-	gui "github.com/grupawp/warships-gui/v2"
+	gui "github.com/JanWojtowski/warships-gui"
+	tl "github.com/grupawp/termloop"
 	"time"
 )
 
@@ -49,7 +50,29 @@ func StartGame(game ShipsGame) {
 	fmt.Println(opponentInfo)
 	fmt.Println("--------------------------------------------")
 
-	ui := gui.NewGUI(true)
+	game.Level = tl.NewBaseLevel(tl.Cell{Bg: tl.ColorBlack, Fg: tl.ColorWhite})
+	game.Game.Screen().SetLevel(game.Level)
+
+	//timer := tl.NewText(42, 1, "Game will start soon.", tl.Attr(termbox.ColorBlack), tl.Attr(termbox.ColorRed))
+	//txt := tl.NewText(30, 3, "Press on any coordinate to shot it.", tl.Attr(termbox.ColorBlack), tl.Attr(termbox.ColorRed))
+	//turn := tl.NewText(40, 5, "Waiting for game to start", tl.Attr(termbox.ColorBlack), tl.Attr(termbox.ColorRed))
+	//opponentBoard := utility.NewBoard(1, 11, nil)
+	//playerBoard := utility.NewBoard(50, 11, nil)
+	//
+	//game.Level.AddEntity(txt)
+	//game.Level.AddEntity(timer)
+	//game.Level.AddEntity(turn)
+	//game.Level.AddEntity(tl.NewText(37, 40, "Press Ctrl+C to exit", tl.Attr(termbox.ColorBlack), tl.Attr(termbox.ColorRed)))
+	//game.Level.AddEntity(opponentBoard)
+	//game.Level.AddEntity(playerBoard)
+	//game.Level.AddEntity(tl.NewText(1, 8, opponentInfo.nickname, tl.Attr(termbox.ColorBlack), tl.Attr(termbox.ColorRed)))
+	//game.Level.AddEntity(tl.NewText(50, 8, playerInfo.nickname, tl.Attr(termbox.ColorBlack), tl.Attr(termbox.ColorRed)))
+	//game.Level.AddEntity(tl.NewText(1, 35, opponentInfo.desc, tl.Attr(termbox.ColorBlack), tl.Attr(termbox.ColorRed)))
+	//game.Level.AddEntity(tl.NewText(50, 35, playerInfo.desc, tl.Attr(termbox.ColorBlack), tl.Attr(termbox.ColorRed)))
+	//
+	//game.Game.Screen().SetLevel(game.Level)
+
+	ui := gui.NewGUI(true, *game.Game)
 
 	timer := gui.NewText(42, 1, "Game will start soon.", nil)
 	txt := gui.NewText(30, 3, "Press on any coordinate to shot it.", nil)
@@ -96,8 +119,6 @@ func StartGame(game ShipsGame) {
 			}
 		}
 	}()
-
-	ui.Start(context.TODO(), nil)
 }
 
 func gameStarter(gameMode string, ownBoard bool, playerInfo PlayerInfo) string {
