@@ -25,6 +25,10 @@ type Opponent struct {
 	OpponentDesc string `json:"opp_desc"`
 }
 
+type LobbyInfo []struct {
+	Nick string `json:"nick"`
+}
+
 type Status struct {
 	GameStatus     string   `json:"game_status"`
 	LastGameStatus string   `json:"last_game_status"`
@@ -121,6 +125,7 @@ func StartGameMulti(nick string, desc string, coords []string, target string) st
 }
 
 func GetOpponentInfo(authKey string) []string {
+	time.Sleep(300 * time.Millisecond)
 	geturl := "https://go-pjatk-server.fly.dev/api/game/desc"
 
 	r, err := http.NewRequest("GET", geturl, nil)
@@ -159,7 +164,12 @@ func GetOpponentInfo(authKey string) []string {
 		panic(err.Error())
 	}
 
+	if data.Opponent == "" {
+		return GetOpponentInfo(authKey)
+	}
+
 	ret := []string{data.Opponent, data.OpponentDesc}
+
 	return ret
 }
 
@@ -300,4 +310,73 @@ func GetBoard(authKey string) []string {
 	}
 
 	return data.Board
+}
+
+func GetLobby() LobbyInfo {
+	geturl := "https://go-pjatk-server.fly.dev/api/lobby"
+
+	r, err := http.NewRequest("GET", geturl, nil)
+	if err != nil {
+		panic(err)
+	}
+
+	client := &http.Client{}
+	res, err := client.Do(r)
+	if err != nil {
+		panic(err)
+	}
+
+	if res.StatusCode != http.StatusOK {
+		if res.StatusCode == http.StatusServiceUnavailable {
+			time.Sleep(300 + time.Millisecond)
+			return GetLobby()
+		} else if res.StatusCode == http.StatusTooManyRequests {
+			time.Sleep(300 + time.Millisecond)
+			return GetLobby()
+		} else {
+			log.Panicln(res.Status)
+		}
+	}
+
+	resBody, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	var data LobbyInfo
+	err = json.Unmarshal(resBody, &data)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	return data
+}
+
+func DeleteSurender() bool {
+	deleteurl := "https://go-pjatk-server.fly.dev/api/game/abandon"
+
+	r, err := http.NewRequest("DELETE", deleteurl, nil)
+	if err != nil {
+		panic(err)
+	}
+
+	client := &http.Client{}
+	res, err := client.Do(r)
+	if err != nil {
+		panic(err)
+	}
+
+	if res.StatusCode != http.StatusOK {
+		if res.StatusCode == http.StatusServiceUnavailable {
+			time.Sleep(300 + time.Millisecond)
+			return DeleteSurender()
+		} else if res.StatusCode == http.StatusTooManyRequests {
+			time.Sleep(300 + time.Millisecond)
+			return DeleteSurender()
+		} else {
+			log.Panicln(res.Status)
+		}
+	}
+
+	return true
 }

@@ -20,7 +20,7 @@ func changeNickname(game ShipsGame) {
 			char := inputField.Listen(context.TODO())
 			game.PlayerInfo.nickname = char
 			changeDescription(game)
-
+			return
 		}
 	}()
 }

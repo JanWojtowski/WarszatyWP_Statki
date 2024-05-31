@@ -20,7 +20,7 @@ func changeDescription(game ShipsGame) {
 			char := inputField.Listen(context.TODO())
 			game.PlayerInfo.desc = char
 			BoardSelect(game)
-
+			return
 		}
 	}()
 }

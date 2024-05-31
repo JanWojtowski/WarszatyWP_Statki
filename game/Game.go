@@ -27,28 +27,18 @@ type GameInfo struct {
 	AuthToken string
 }
 
-func StartGame(game ShipsGame) {
+func StartGame(game ShipsGame, gameMode string) {
 	playerInfo := game.PlayerInfo
 
-	gameMode := "single"
-
-	gameInfo := GameInfo{gameStarter(gameMode, playerInfo.ownBoard, playerInfo)}
+	gameInfo := GameInfo{gameStarter(gameMode, playerInfo)}
 
 	if !playerInfo.ownBoard {
 		playerInfo.coords = httpClient.GetBoard(gameInfo.AuthToken)
 	}
 
-	fmt.Println(gameInfo)
-	fmt.Println("--------------------------------------------")
-
 	tempInfo := httpClient.GetOpponentInfo(gameInfo.AuthToken)
 
-	opponentInfo := OpponentInfo{
-		nickname: tempInfo[0],
-		desc:     tempInfo[1],
-	}
-	fmt.Println(opponentInfo)
-	fmt.Println("--------------------------------------------")
+	opponentInfo := OpponentInfo{tempInfo[0], tempInfo[1]}
 
 	game.Level = tl.NewBaseLevel(tl.Cell{Bg: tl.ColorBlack, Fg: tl.ColorWhite})
 	game.Game.Screen().SetLevel(game.Level)
@@ -121,9 +111,10 @@ func StartGame(game ShipsGame) {
 	}()
 }
 
-func gameStarter(gameMode string, ownBoard bool, playerInfo PlayerInfo) string {
+func gameStarter(gameMode string, playerInfo PlayerInfo) string {
 	var token string
-	if !ownBoard {
+
+	if !playerInfo.ownBoard {
 		playerInfo.coords = []string{}
 	}
 
@@ -131,6 +122,7 @@ func gameStarter(gameMode string, ownBoard bool, playerInfo PlayerInfo) string {
 	case "single":
 		token = httpClient.StartGameWithBot(playerInfo.nickname, playerInfo.desc, playerInfo.coords)
 		time.Sleep(1 * time.Second)
+
 	case "multiplayer":
 		token = httpClient.StartGameMulti(playerInfo.nickname, playerInfo.desc, playerInfo.coords, "Ktos")
 		time.Sleep(1 * time.Second)

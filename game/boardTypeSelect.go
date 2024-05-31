@@ -36,7 +36,7 @@ func BoardSelect(game ShipsGame) {
 	game.Level.AddEntity(singleButton)
 	game.Level.AddEntity(tl.NewText(22, 16, "Random", tl.Attr(termbox.ColorBlack), tl.Attr(termbox.ColorRed)))
 	game.Level.AddEntity(multiButton)
-	game.Level.AddEntity(tl.NewText(57, 16, "Make your own", tl.Attr(termbox.ColorBlack), tl.Attr(termbox.ColorGreen)))
+	game.Level.AddEntity(tl.NewText(53, 16, "Make your own", tl.Attr(termbox.ColorBlack), tl.Attr(termbox.ColorGreen)))
 	game.Level.AddEntity(backButton)
 	game.Level.AddEntity(tl.NewText(36, 26, "Back to menu", tl.Attr(termbox.ColorBlack), tl.Attr(termbox.ColorWhite)))
 
@@ -52,9 +52,11 @@ func BoardSelect(game ShipsGame) {
 			} else if char == "auto" {
 				game.PlayerInfo.ownBoard = false
 				gameModeSelect(game)
+				return
 			} else if char == "own" {
 				game.PlayerInfo.ownBoard = true
 				gameModeSelect(game)
+				return
 			}
 		}
 	}()

@@ -50,7 +50,11 @@ func gameModeSelect(game ShipsGame) {
 				MainMenu(game)
 				return
 			} else if char == "single" {
-				StartGame(game)
+				StartGame(game, char)
+				return
+			} else if char == "multi" {
+				OpponentSelect(game)
+				return
 			}
 		}
 	}()

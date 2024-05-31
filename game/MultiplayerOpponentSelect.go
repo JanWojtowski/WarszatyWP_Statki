@@ -2,10 +2,10 @@ package game
 
 import (
 	"StatkiBasic/game/utility"
+	"StatkiBasic/httpClient"
 	"context"
 	tl "github.com/grupawp/termloop"
 	"github.com/nsf/termbox-go"
-	"io/ioutil"
 )
 
 func OpponentSelect(game ShipsGame) {
@@ -13,7 +13,7 @@ func OpponentSelect(game ShipsGame) {
 	gameModeChan := channel{make(chan string)}
 
 	backButton := utility.NewClickableRectangle(
-		tl.NewRectangle(1, 1, 30, 3, tl.Attr(termbox.ColorWhite)),
+		tl.NewRectangle(1, 1, 15, 3, tl.Attr(termbox.ColorWhite)),
 		"back",
 		gameModeChan.ch)
 
@@ -21,26 +21,24 @@ func OpponentSelect(game ShipsGame) {
 		tl.NewRectangle(10, 15, 30, 3, tl.Attr(termbox.ColorRed)),
 		"single",
 		gameModeChan.ch)
-	multiButton := utility.NewClickableRectangle(
-		tl.NewRectangle(45, 15, 30, 3, tl.Attr(termbox.ColorGreen)),
-		"multi",
-		gameModeChan.ch)
 
-	dat, err := ioutil.ReadFile("game/files/gamemode.txt")
-	if err != nil {
-		panic(err)
+	lobby := httpClient.GetLobby()
+
+	if len(lobby) == 0 {
+		game.Level.AddEntity(tl.NewText(30, 7, "No players found", tl.Attr(termbox.ColorBlack), tl.Attr(termbox.ColorWhite)))
+	} else if len(lobby) > 0 && len(lobby) < 5 {
+		for i := 1; i <= len(lobby); i++ {
+			game.Level.AddEntity(utility.NewClickableRectangle(
+				tl.NewRectangle(20, 2+5*i, 30, 3, tl.Attr(termbox.ColorWhite)),
+				lobby[i-1].Nick,
+				gameModeChan.ch))
+			game.Level.AddEntity(tl.NewText(30, 3+5*i, lobby[i-1].Nick,
+				tl.Attr(termbox.ColorBlack), tl.Attr(termbox.ColorWhite)))
+		}
 	}
 
-	title := tl.NewEntityFromCanvas(5, 5, tl.CanvasFromString(string(dat)))
-
-	game.Level.AddEntity(title)
-	game.Level.AddEntity(singleButton)
-	game.Level.AddEntity(tl.NewText(22, 16, "Single", tl.Attr(termbox.ColorBlack), tl.Attr(termbox.ColorRed)))
-	game.Level.AddEntity(multiButton)
-	game.Level.AddEntity(tl.NewText(57, 16, "Multi", tl.Attr(termbox.ColorBlack), tl.Attr(termbox.ColorGreen)))
 	game.Level.AddEntity(backButton)
-	game.Level.AddEntity(tl.NewText(36, 26, "Back to menu", tl.Attr(termbox.ColorBlack), tl.Attr(termbox.ColorWhite)))
-
+	game.Level.AddEntity(tl.NewText(3, 2, "<--- Back", tl.Attr(termbox.ColorBlack), tl.Attr(termbox.ColorWhite)))
 	game.Game.Screen().SetLevel(game.Level)
 
 	go func() {
@@ -48,10 +46,10 @@ func OpponentSelect(game ShipsGame) {
 			char := singleButton.Listen(context.TODO())
 
 			if char == "back" {
-				MainMenu(game)
+				gameModeSelect(game)
 				return
-			} else if char == "single" {
-				StartGame(game)
+			} else {
+				panic(char)
 			}
 		}
 	}()
