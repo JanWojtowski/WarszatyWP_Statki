@@ -45,7 +45,15 @@ func MainMenu(game ShipsGame) {
 			char := button1.Listen(context.TODO())
 
 			if char == "play" {
-				changeNickname(game)
+				if game.PlayerInfo.nickname != "" && game.PlayerInfo.desc != "" {
+					BoardSelect(game)
+				} else {
+					if game.PlayerInfo.nickname == "" {
+						changeNickname(game)
+					} else if game.PlayerInfo.desc == "" {
+						changeDescription(game)
+					}
+				}
 				return
 			} else if char == "quit" {
 				panic("click " + char)

@@ -71,10 +71,10 @@ func StartGameWithBot(nick string, desc string, coords []string) string {
 
 	if res.StatusCode != http.StatusOK {
 		if res.StatusCode == http.StatusServiceUnavailable {
-			time.Sleep(300 + time.Millisecond)
+			time.Sleep(1 + time.Second)
 			return StartGameWithBot(nick, desc, coords)
 		} else if res.StatusCode == http.StatusTooManyRequests {
-			time.Sleep(300 + time.Millisecond)
+			time.Sleep(1 + time.Second)
 			return StartGameWithBot(nick, desc, coords)
 		} else {
 			log.Panicln(res.Status)
@@ -84,7 +84,7 @@ func StartGameWithBot(nick string, desc string, coords []string) string {
 	return authKey
 }
 
-func StartGameMulti(nick string, desc string, coords []string, target string) string {
+func StartGameMultiAttack(nick string, desc string, coords []string, target string) string {
 	posturl := "https://go-pjatk-server.fly.dev/api/game"
 
 	body, err := json.Marshal(GameStarter{
@@ -113,10 +113,49 @@ func StartGameMulti(nick string, desc string, coords []string, target string) st
 	if res.StatusCode != http.StatusOK {
 		if res.StatusCode == http.StatusServiceUnavailable {
 			time.Sleep(300 + time.Millisecond)
-			return StartGameMulti(nick, desc, coords, target)
+			return StartGameMultiAttack(nick, desc, coords, target)
 		} else if res.StatusCode == http.StatusTooManyRequests {
 			time.Sleep(300 + time.Millisecond)
-			return StartGameMulti(nick, desc, coords, target)
+			return StartGameMultiAttack(nick, desc, coords, target)
+		} else {
+			log.Panicln(res.Status)
+		}
+	}
+	return authKey
+}
+
+func StartGameMultiLobby(nick string, desc string, coords []string) string {
+	posturl := "https://go-pjatk-server.fly.dev/api/game"
+
+	body, err := json.Marshal(GameStarter{
+		Coords: coords,
+		Desc:   desc,
+		Nick:   nick,
+		Wpbot:  false,
+	})
+
+	r, err := http.NewRequest("POST", posturl, bytes.NewBuffer(body))
+	if err != nil {
+		panic(err)
+	}
+
+	r.Header.Add("Content-Type", "application/json")
+
+	client := &http.Client{}
+	res, err := client.Do(r)
+	if err != nil {
+		panic(err)
+	}
+
+	authKey := res.Header.Get("x-auth-token")
+
+	if res.StatusCode != http.StatusOK {
+		if res.StatusCode == http.StatusServiceUnavailable {
+			time.Sleep(300 + time.Millisecond)
+			return StartGameMultiLobby(nick, desc, coords)
+		} else if res.StatusCode == http.StatusTooManyRequests {
+			time.Sleep(300 + time.Millisecond)
+			return StartGameMultiLobby(nick, desc, coords)
 		} else {
 			log.Panicln(res.Status)
 		}
@@ -125,7 +164,6 @@ func StartGameMulti(nick string, desc string, coords []string, target string) st
 }
 
 func GetOpponentInfo(authKey string) []string {
-	time.Sleep(300 * time.Millisecond)
 	geturl := "https://go-pjatk-server.fly.dev/api/game/desc"
 
 	r, err := http.NewRequest("GET", geturl, nil)
@@ -143,10 +181,10 @@ func GetOpponentInfo(authKey string) []string {
 
 	if res.StatusCode != http.StatusOK {
 		if res.StatusCode == http.StatusServiceUnavailable {
-			time.Sleep(300 + time.Millisecond)
+			time.Sleep(500 + time.Millisecond)
 			return GetOpponentInfo(authKey)
 		} else if res.StatusCode == http.StatusTooManyRequests {
-			time.Sleep(300 + time.Millisecond)
+			time.Sleep(500 + time.Millisecond)
 			return GetOpponentInfo(authKey)
 		} else {
 			log.Panicln(res.Status)
@@ -165,6 +203,7 @@ func GetOpponentInfo(authKey string) []string {
 	}
 
 	if data.Opponent == "" {
+		time.Sleep(500 + time.Millisecond)
 		return GetOpponentInfo(authKey)
 	}
 
@@ -191,10 +230,10 @@ func GetStatus(authKey string) Status {
 
 	if res.StatusCode != http.StatusOK {
 		if res.StatusCode == http.StatusServiceUnavailable {
-			time.Sleep(300 + time.Millisecond)
+			time.Sleep(500 + time.Millisecond)
 			return GetStatus(authKey)
 		} else if res.StatusCode == http.StatusTooManyRequests {
-			time.Sleep(300 + time.Millisecond)
+			time.Sleep(500 + time.Millisecond)
 			return GetStatus(authKey)
 		} else {
 			log.Panicln(res.Status)
@@ -239,10 +278,10 @@ func PostFire(cord string, authKey string) string {
 	if res.StatusCode != http.StatusOK {
 		if res.StatusCode != http.StatusOK {
 			if res.StatusCode == http.StatusServiceUnavailable {
-				time.Sleep(300 + time.Millisecond)
+				time.Sleep(500 + time.Millisecond)
 				return PostFire(cord, authKey)
 			} else if res.StatusCode == http.StatusTooManyRequests {
-				time.Sleep(300 + time.Millisecond)
+				time.Sleep(500 + time.Millisecond)
 				return PostFire(cord, authKey)
 			} else {
 				log.Panicln(res.Status)
@@ -288,7 +327,7 @@ func GetBoard(authKey string) []string {
 			time.Sleep(300 + time.Millisecond)
 			return GetBoard(authKey)
 		} else if res.StatusCode == http.StatusTooManyRequests {
-			time.Sleep(300 + time.Millisecond)
+			time.Sleep(1 + time.Second)
 			return GetBoard(authKey)
 		} else {
 			log.Panicln(res.Status)
@@ -328,10 +367,10 @@ func GetLobby() LobbyInfo {
 
 	if res.StatusCode != http.StatusOK {
 		if res.StatusCode == http.StatusServiceUnavailable {
-			time.Sleep(300 + time.Millisecond)
+			time.Sleep(500 + time.Millisecond)
 			return GetLobby()
 		} else if res.StatusCode == http.StatusTooManyRequests {
-			time.Sleep(300 + time.Millisecond)
+			time.Sleep(1 + time.Second)
 			return GetLobby()
 		} else {
 			log.Panicln(res.Status)
@@ -352,13 +391,15 @@ func GetLobby() LobbyInfo {
 	return data
 }
 
-func DeleteSurender() bool {
+func DeleteSurrender(authKey string) bool {
 	deleteurl := "https://go-pjatk-server.fly.dev/api/game/abandon"
 
 	r, err := http.NewRequest("DELETE", deleteurl, nil)
 	if err != nil {
 		panic(err)
 	}
+
+	r.Header.Set("X-Auth-Token", authKey)
 
 	client := &http.Client{}
 	res, err := client.Do(r)
@@ -368,15 +409,43 @@ func DeleteSurender() bool {
 
 	if res.StatusCode != http.StatusOK {
 		if res.StatusCode == http.StatusServiceUnavailable {
-			time.Sleep(300 + time.Millisecond)
-			return DeleteSurender()
+			time.Sleep(500 + time.Millisecond)
+			return DeleteSurrender(authKey)
 		} else if res.StatusCode == http.StatusTooManyRequests {
-			time.Sleep(300 + time.Millisecond)
-			return DeleteSurender()
+			time.Sleep(1 + time.Second)
+			return DeleteSurrender(authKey)
 		} else {
 			log.Panicln(res.Status)
 		}
 	}
 
 	return true
+}
+
+func GetRefresh(authKey string) {
+	geturl := "https://go-pjatk-server.fly.dev/api/game/refresh"
+
+	r, err := http.NewRequest("GET", geturl, nil)
+	if err != nil {
+		panic(err)
+	}
+	r.Header.Set("X-Auth-Token", authKey)
+
+	client := &http.Client{}
+	res, err := client.Do(r)
+	if err != nil {
+		panic(err)
+	}
+
+	if res.StatusCode != http.StatusOK {
+		if res.StatusCode == http.StatusServiceUnavailable {
+			time.Sleep(1 + time.Second)
+			GetRefresh(authKey)
+		} else if res.StatusCode == http.StatusTooManyRequests {
+			time.Sleep(1 + time.Second)
+			GetRefresh(authKey)
+		} else {
+			log.Panicln(res.Status)
+		}
+	}
 }

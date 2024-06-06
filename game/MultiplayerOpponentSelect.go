@@ -17,9 +17,9 @@ func OpponentSelect(game ShipsGame) {
 		"back",
 		gameModeChan.ch)
 
-	singleButton := utility.NewClickableRectangle(
-		tl.NewRectangle(10, 15, 30, 3, tl.Attr(termbox.ColorRed)),
-		"single",
+	createLobbyButton := utility.NewClickableRectangle(
+		tl.NewRectangle(30, 40, 20, 3, tl.Attr(termbox.ColorCyan)),
+		"newLobby",
 		gameModeChan.ch)
 
 	lobby := httpClient.GetLobby()
@@ -37,19 +37,23 @@ func OpponentSelect(game ShipsGame) {
 		}
 	}
 
+	game.Level.AddEntity(createLobbyButton)
+	game.Level.AddEntity(tl.NewText(34, 41, "Create Lobby", tl.Attr(termbox.ColorBlack), tl.Attr(termbox.ColorCyan)))
 	game.Level.AddEntity(backButton)
 	game.Level.AddEntity(tl.NewText(3, 2, "<--- Back", tl.Attr(termbox.ColorBlack), tl.Attr(termbox.ColorWhite)))
 	game.Game.Screen().SetLevel(game.Level)
 
 	go func() {
 		for {
-			char := singleButton.Listen(context.TODO())
+			char := backButton.Listen(context.TODO())
 
 			if char == "back" {
 				gameModeSelect(game)
 				return
+			} else if char == "newLobby" {
+				StartGame(game, "multiplayerLobby", "")
 			} else {
-				panic(char)
+				StartGame(game, "multiplayerAttack", char)
 			}
 		}
 	}()

@@ -7,34 +7,33 @@ import (
 
 type InputField struct {
 	*termloop.Text
-	buffer string
-	ch     chan string
+	buffer    string
+	ch        chan string
+	maxlenght int
 }
 
-func NewInputField(x, y int, ch chan string) *InputField {
-	return &InputField{termloop.NewText(x, y, "", termloop.ColorWhite, termloop.ColorBlack), "", ch}
+func NewInputField(x, y int, ch chan string, maxlenght int) *InputField {
+	return &InputField{termloop.NewText(x, y, "", termloop.ColorWhite, termloop.ColorBlack), "", ch, maxlenght}
 }
 
 func (i *InputField) Tick(event termloop.Event) {
-	if event.Type == termloop.EventKey { // Is it a keyboard event?
-		switch event.Key { // If so, switch on the pressed key.
+	if event.Type == termloop.EventKey {
+		switch event.Key {
 		case termloop.KeyEnter:
-			// User has pressed enter, process buffer and clear it
 			i.processInput(i.buffer)
 			i.buffer = ""
 		case termloop.KeySpace:
-			// User has pressed space, add a space to the buffer
 			i.buffer += " "
 		case termloop.KeyBackspace, termloop.KeyBackspace2:
-			// User has pressed backspace, remove the last character from the buffer
 			if len(i.buffer) > 0 {
 				i.buffer = i.buffer[:len(i.buffer)-1]
 			}
 		default:
-			// User has pressed a different key, append it to the buffer
-			i.buffer += string(event.Ch)
+			if len(i.buffer) <= i.maxlenght {
+				i.buffer += string(event.Ch)
+			}
 		}
-		i.SetText(i.buffer) // Update the visual text field
+		i.SetText(i.buffer)
 	}
 }
 
@@ -42,7 +41,6 @@ func (i *InputField) processInput(input string) {
 	select {
 	case i.ch <- i.buffer:
 	default:
-		// drop
 	}
 }
 
@@ -66,7 +64,7 @@ func TextTest() {
 		Bg: termloop.ColorBlack,
 	})
 
-	inputField := NewInputField(10, 10, temp.ch)
+	inputField := NewInputField(10, 10, temp.ch, 10)
 	level.AddEntity(inputField)
 
 	game.Screen().SetLevel(level)

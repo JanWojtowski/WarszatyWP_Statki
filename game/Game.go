@@ -1,11 +1,13 @@
 package game
 
 import (
+	"StatkiBasic/game/utility"
 	"StatkiBasic/httpClient"
 	"context"
 	"fmt"
 	gui "github.com/JanWojtowski/warships-gui"
 	tl "github.com/grupawp/termloop"
+	"github.com/nsf/termbox-go"
 	"time"
 )
 
@@ -27,59 +29,57 @@ type GameInfo struct {
 	AuthToken string
 }
 
-func StartGame(game ShipsGame, gameMode string) {
+func StartGame(game ShipsGame, gameMode string, opponent string) {
 	playerInfo := game.PlayerInfo
 
-	gameInfo := GameInfo{gameStarter(gameMode, playerInfo)}
+	gameInfo := GameInfo{gameStarter(gameMode, playerInfo, opponent)}
 
 	if !playerInfo.ownBoard {
 		playerInfo.coords = httpClient.GetBoard(gameInfo.AuthToken)
 	}
 
 	tempInfo := httpClient.GetOpponentInfo(gameInfo.AuthToken)
-
 	opponentInfo := OpponentInfo{tempInfo[0], tempInfo[1]}
 
 	game.Level = tl.NewBaseLevel(tl.Cell{Bg: tl.ColorBlack, Fg: tl.ColorWhite})
 	game.Game.Screen().SetLevel(game.Level)
 
-	//timer := tl.NewText(42, 1, "Game will start soon.", tl.Attr(termbox.ColorBlack), tl.Attr(termbox.ColorRed))
-	//txt := tl.NewText(30, 3, "Press on any coordinate to shot it.", tl.Attr(termbox.ColorBlack), tl.Attr(termbox.ColorRed))
-	//turn := tl.NewText(40, 5, "Waiting for game to start", tl.Attr(termbox.ColorBlack), tl.Attr(termbox.ColorRed))
-	//opponentBoard := utility.NewBoard(1, 11, nil)
-	//playerBoard := utility.NewBoard(50, 11, nil)
-	//
-	//game.Level.AddEntity(txt)
-	//game.Level.AddEntity(timer)
-	//game.Level.AddEntity(turn)
-	//game.Level.AddEntity(tl.NewText(37, 40, "Press Ctrl+C to exit", tl.Attr(termbox.ColorBlack), tl.Attr(termbox.ColorRed)))
-	//game.Level.AddEntity(opponentBoard)
-	//game.Level.AddEntity(playerBoard)
-	//game.Level.AddEntity(tl.NewText(1, 8, opponentInfo.nickname, tl.Attr(termbox.ColorBlack), tl.Attr(termbox.ColorRed)))
-	//game.Level.AddEntity(tl.NewText(50, 8, playerInfo.nickname, tl.Attr(termbox.ColorBlack), tl.Attr(termbox.ColorRed)))
-	//game.Level.AddEntity(tl.NewText(1, 35, opponentInfo.desc, tl.Attr(termbox.ColorBlack), tl.Attr(termbox.ColorRed)))
-	//game.Level.AddEntity(tl.NewText(50, 35, playerInfo.desc, tl.Attr(termbox.ColorBlack), tl.Attr(termbox.ColorRed)))
-	//
-	//game.Game.Screen().SetLevel(game.Level)
+	surrenderChan := channel{make(chan string)}
+
+	surrenderButton := utility.NewClickableRectangle(
+		tl.NewRectangle(38, 40, 20, 3, tl.Attr(termbox.ColorRed)),
+		"surrender",
+		surrenderChan.ch)
+
+	game.Level.AddEntity(surrenderButton)
+	game.Level.AddEntity(tl.NewText(43, 41, "Surrender", tl.Attr(termbox.ColorBlack), tl.Attr(termbox.ColorRed)))
 
 	ui := gui.NewGUI(true, *game.Game)
 
 	timer := gui.NewText(42, 1, "Game will start soon.", nil)
 	txt := gui.NewText(30, 3, "Press on any coordinate to shot it.", nil)
 	turn := gui.NewText(40, 5, "Waiting for game to start", nil)
+	playerNick := gui.NewText(50, 8, playerInfo.nickname, nil)
+	opponentNick := gui.NewText(1, 8, opponentInfo.nickname, nil)
 	opponentBoard := gui.NewBoard(1, 11, nil)
 	playerBoard := gui.NewBoard(50, 11, nil)
+
+	playerDesc := descriptionFormater(52, 33, 40, playerInfo.desc)
+	opponentDesc := descriptionFormater(3, 33, 40, opponentInfo.desc)
 
 	ui.Draw(txt)
 	ui.Draw(timer)
 	ui.Draw(turn)
-	ui.Draw(gui.NewText(37, 40, "Press Ctrl+C to exit", nil))
 	ui.Draw(opponentBoard)
 	ui.Draw(playerBoard)
-	ui.Draw(gui.NewText(1, 8, opponentInfo.nickname, nil))
-	ui.Draw(gui.NewText(50, 8, playerInfo.nickname, nil))
-	ui.Draw(gui.NewText(1, 35, opponentInfo.desc, nil))
-	ui.Draw(gui.NewText(50, 35, playerInfo.desc, nil))
+	ui.Draw(opponentNick)
+	ui.Draw(playerNick)
+	for _, element := range playerDesc {
+		ui.Draw(&element)
+	}
+	for _, element := range opponentDesc {
+		ui.Draw(&element)
+	}
 
 	go func() {
 		for {
@@ -90,6 +90,30 @@ func StartGame(game ShipsGame, gameMode string) {
 				boardsUpdater(gameInfo.AuthToken, playerInfo, playerBoard, opponentBoard)
 			} else {
 				txt.SetText("Wait for your turn!")
+			}
+		}
+	}()
+
+	go func() {
+		for {
+			char := surrenderButton.Listen(context.TODO())
+			if char == "surrender" {
+				httpClient.DeleteSurrender(gameInfo.AuthToken)
+				ui.Remove(txt)
+				ui.Remove(timer)
+				ui.Remove(turn)
+				ui.Remove(opponentBoard)
+				ui.Remove(playerBoard)
+				ui.Remove(opponentNick)
+				ui.Remove(playerNick)
+				for _, element := range opponentDesc {
+					ui.Remove(&element)
+				}
+				for _, element := range playerDesc {
+					ui.Remove(&element)
+				}
+				MainMenu(game)
+				return
 			}
 		}
 	}()
@@ -111,7 +135,7 @@ func StartGame(game ShipsGame, gameMode string) {
 	}()
 }
 
-func gameStarter(gameMode string, playerInfo PlayerInfo) string {
+func gameStarter(gameMode string, playerInfo PlayerInfo, opponent string) string {
 	var token string
 
 	if !playerInfo.ownBoard {
@@ -122,10 +146,20 @@ func gameStarter(gameMode string, playerInfo PlayerInfo) string {
 	case "single":
 		token = httpClient.StartGameWithBot(playerInfo.nickname, playerInfo.desc, playerInfo.coords)
 		time.Sleep(1 * time.Second)
-
-	case "multiplayer":
-		token = httpClient.StartGameMulti(playerInfo.nickname, playerInfo.desc, playerInfo.coords, "Ktos")
+	case "multiplayerAttack":
+		token = httpClient.StartGameMultiAttack(playerInfo.nickname, playerInfo.desc, playerInfo.coords, opponent)
 		time.Sleep(1 * time.Second)
+	case "multiplayerLobby":
+		token = httpClient.StartGameMultiLobby(playerInfo.nickname, playerInfo.desc, playerInfo.coords)
+		time.Sleep(1 * time.Second)
+		for {
+			if httpClient.GetStatus(token).GameStatus != "waiting" {
+				break
+			} else {
+				httpClient.GetRefresh(token)
+				time.Sleep(1 * time.Second)
+			}
+		}
 	default:
 		token = ""
 	}
@@ -139,8 +173,13 @@ func gameStarter(gameMode string, playerInfo PlayerInfo) string {
 func cordToNumbers(cord string) []int {
 	numbers := []int{0, 0}
 
-	numbers[0] = int(cord[0]) - 65
-	numbers[1] = int(cord[1]) - 49
+	if len(cord) == 3 {
+		numbers[0] = int(cord[0]) - 65
+		numbers[1] = 9
+	} else {
+		numbers[0] = int(cord[0]) - 65
+		numbers[1] = int(cord[1]) - 49
+	}
 
 	return numbers
 }
@@ -216,4 +255,26 @@ func fire(cord string, authKey string, playerInfo *PlayerInfo) string {
 
 func canFire(authKey string) bool {
 	return httpClient.GetStatus(authKey).ShouldFire
+}
+
+func descriptionFormater(x, y, maxlinelength int, desc string) []gui.Text {
+	var texts []gui.Text
+	line := ""
+	var lines []string
+	i := 0
+	for _, ch := range desc {
+		line = line + fmt.Sprintf("%c", ch)
+		i++
+		if i%maxlinelength == 0 {
+			lines = append(lines, line)
+			line = ""
+		}
+	}
+	lines = append(lines, line)
+	for _, line := range lines {
+		texts = append(texts, *gui.NewText(x, y, line, nil))
+		y++
+	}
+
+	return texts
 }
