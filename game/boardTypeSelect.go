@@ -54,8 +54,7 @@ func BoardSelect(game ShipsGame) {
 				gameModeSelect(game)
 				return
 			} else if char == "own" {
-				game.PlayerInfo.ownBoard = true
-				gameModeSelect(game)
+				BoardBuilder(game)
 				return
 			}
 		}

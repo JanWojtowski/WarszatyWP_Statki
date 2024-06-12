@@ -8,6 +8,7 @@ import (
 	gui "github.com/JanWojtowski/warships-gui"
 	tl "github.com/grupawp/termloop"
 	"github.com/nsf/termbox-go"
+	"math"
 	"time"
 )
 
@@ -52,7 +53,8 @@ func StartGame(game ShipsGame, gameMode string, opponent string) {
 		surrenderChan.ch)
 
 	game.Level.AddEntity(surrenderButton)
-	game.Level.AddEntity(tl.NewText(43, 41, "Surrender", tl.Attr(termbox.ColorBlack), tl.Attr(termbox.ColorRed)))
+	sur := tl.NewText(43, 41, "Surrender", tl.Attr(termbox.ColorBlack), tl.Attr(termbox.ColorRed))
+	game.Level.AddEntity(sur)
 
 	ui := gui.NewGUI(true, *game.Game)
 
@@ -60,6 +62,7 @@ func StartGame(game ShipsGame, gameMode string, opponent string) {
 	txt := gui.NewText(30, 3, "Press on any coordinate to shot it.", nil)
 	turn := gui.NewText(40, 5, "Waiting for game to start", nil)
 	playerNick := gui.NewText(50, 8, playerInfo.nickname, nil)
+	plyAccuracy := gui.NewText(70, 8, "--%", nil)
 	opponentNick := gui.NewText(1, 8, opponentInfo.nickname, nil)
 	opponentBoard := gui.NewBoard(1, 11, nil)
 	playerBoard := gui.NewBoard(50, 11, nil)
@@ -67,6 +70,7 @@ func StartGame(game ShipsGame, gameMode string, opponent string) {
 	playerDesc := descriptionFormater(52, 33, 40, playerInfo.desc)
 	opponentDesc := descriptionFormater(3, 33, 40, opponentInfo.desc)
 
+	ui.Draw(plyAccuracy)
 	ui.Draw(txt)
 	ui.Draw(timer)
 	ui.Draw(turn)
@@ -82,12 +86,44 @@ func StartGame(game ShipsGame, gameMode string, opponent string) {
 	}
 
 	go func() {
+		totalShots := 0
+		hits := 0
 		for {
 			char := opponentBoard.Listen(context.TODO())
 			if canFire(gameInfo.AuthToken) {
 				fireResult := fire(char, gameInfo.AuthToken, &playerInfo)
 				txt.SetText(fmt.Sprintf("Fired at Coordinates: %s. %s!!!", char, fireResult))
+				totalShots++
+				if fireResult == "hit" {
+					hits++
+				}
+				plyAccuracy.SetText(fmt.Sprintf("%d%%", int(math.Round(float64(hits)/float64(totalShots)*float64(100)))))
 				boardsUpdater(gameInfo.AuthToken, playerInfo, playerBoard, opponentBoard)
+				if len(playerInfo.hitCoords) == 20 {
+					ui.Remove(plyAccuracy)
+					ui.Remove(txt)
+					ui.Remove(timer)
+					ui.Remove(turn)
+					ui.Remove(opponentBoard)
+					ui.Remove(playerBoard)
+					ui.Remove(opponentNick)
+					ui.Remove(playerNick)
+					game.Level.RemoveEntity(surrenderButton)
+					game.Level.RemoveEntity(sur)
+					for _, element := range opponentDesc {
+						ui.Remove(&element)
+					}
+					for _, element := range playerDesc {
+						ui.Remove(&element)
+					}
+					res := gui.NewText(50, 20, "", nil)
+					res.SetText("You Won!!! :D")
+					ui.Draw(res)
+					time.Sleep(5 * time.Second)
+					ui.Remove(res)
+					MainMenu(game)
+					return
+				}
 			} else {
 				txt.SetText("Wait for your turn!")
 			}
@@ -99,6 +135,7 @@ func StartGame(game ShipsGame, gameMode string, opponent string) {
 			char := surrenderButton.Listen(context.TODO())
 			if char == "surrender" {
 				httpClient.DeleteSurrender(gameInfo.AuthToken)
+				ui.Remove(plyAccuracy)
 				ui.Remove(txt)
 				ui.Remove(timer)
 				ui.Remove(turn)
@@ -128,7 +165,59 @@ func StartGame(game ShipsGame, gameMode string, opponent string) {
 			} else {
 				turn.SetText(fmt.Sprintf("Turn of: %s", status.Opponent))
 			}
+			if status.Timer == 1 {
+				time.Sleep(1 * time.Second)
+				ui.Remove(plyAccuracy)
+				ui.Remove(txt)
+				ui.Remove(timer)
+				ui.Remove(turn)
+				ui.Remove(opponentBoard)
+				ui.Remove(playerBoard)
+				ui.Remove(opponentNick)
+				ui.Remove(playerNick)
+				game.Level.RemoveEntity(surrenderButton)
+				game.Level.RemoveEntity(sur)
+				for _, element := range opponentDesc {
+					ui.Remove(&element)
+				}
+				for _, element := range playerDesc {
+					ui.Remove(&element)
+				}
+				res := gui.NewText(50, 20, "", nil)
+				res.SetText("You Lose!!! :(")
+				ui.Draw(res)
+				time.Sleep(5 * time.Second)
+				ui.Remove(res)
+				MainMenu(game)
+				return
+			}
 			if status.GameStatus == "ended" {
+				ui.Remove(plyAccuracy)
+				ui.Remove(txt)
+				ui.Remove(timer)
+				ui.Remove(turn)
+				ui.Remove(opponentBoard)
+				ui.Remove(playerBoard)
+				ui.Remove(opponentNick)
+				ui.Remove(playerNick)
+				game.Level.RemoveEntity(surrenderButton)
+				game.Level.RemoveEntity(sur)
+				for _, element := range opponentDesc {
+					ui.Remove(&element)
+				}
+				for _, element := range playerDesc {
+					ui.Remove(&element)
+				}
+				res := gui.NewText(50, 20, "", nil)
+				if len(playerInfo.hitCoords) == 20 {
+					res.SetText("You Won!!!")
+				} else {
+					res.SetText("You Lose!!! :(")
+				}
+				ui.Draw(res)
+				time.Sleep(5 * time.Second)
+				ui.Remove(res)
+				MainMenu(game)
 				return
 			}
 		}

@@ -22,7 +22,7 @@ func MainMenu(game ShipsGame) {
 		temp.ch)
 	button2 := utility.NewClickableRectangle(
 		tl.NewRectangle(25, 25, 30, 3, tl.Attr(termbox.ColorGreen)),
-		"quit",
+		"stats",
 		temp.ch)
 
 	dat, err := ioutil.ReadFile("game/files/title.txt")
@@ -36,7 +36,7 @@ func MainMenu(game ShipsGame) {
 	game.Level.AddEntity(button1)
 	game.Level.AddEntity(tl.NewText(37, 21, "Start", tl.Attr(termbox.ColorBlack), tl.Attr(termbox.ColorRed)))
 	game.Level.AddEntity(button2)
-	game.Level.AddEntity(tl.NewText(37, 26, "Quit", tl.Attr(termbox.ColorBlack), tl.Attr(termbox.ColorGreen)))
+	game.Level.AddEntity(tl.NewText(35, 26, "Leaderboard", tl.Attr(termbox.ColorBlack), tl.Attr(termbox.ColorGreen)))
 
 	game.Game.Screen().SetLevel(game.Level)
 
@@ -55,8 +55,8 @@ func MainMenu(game ShipsGame) {
 					}
 				}
 				return
-			} else if char == "quit" {
-				panic("click " + char)
+			} else if char == "stats" {
+				StatsBoard(game)
 			}
 
 		}

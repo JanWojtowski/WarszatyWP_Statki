@@ -29,6 +29,18 @@ type LobbyInfo []struct {
 	Nick string `json:"nick"`
 }
 
+type PlayerStats struct {
+	Nick   string `json:"nick"`
+	Games  int    `json:"games"`
+	Wins   int    `json:"wins"`
+	Rank   int    `json:"rank"`
+	Points int    `json:"points"`
+}
+
+type Stats struct {
+	Stats []PlayerStats `json:"stats"`
+}
+
 type Status struct {
 	GameStatus     string   `json:"game_status"`
 	LastGameStatus string   `json:"last_game_status"`
@@ -71,10 +83,10 @@ func StartGameWithBot(nick string, desc string, coords []string) string {
 
 	if res.StatusCode != http.StatusOK {
 		if res.StatusCode == http.StatusServiceUnavailable {
-			time.Sleep(1 + time.Second)
+			time.Sleep(1 * time.Second)
 			return StartGameWithBot(nick, desc, coords)
 		} else if res.StatusCode == http.StatusTooManyRequests {
-			time.Sleep(1 + time.Second)
+			time.Sleep(1 * time.Second)
 			return StartGameWithBot(nick, desc, coords)
 		} else {
 			log.Panicln(res.Status)
@@ -112,10 +124,10 @@ func StartGameMultiAttack(nick string, desc string, coords []string, target stri
 
 	if res.StatusCode != http.StatusOK {
 		if res.StatusCode == http.StatusServiceUnavailable {
-			time.Sleep(300 + time.Millisecond)
+			time.Sleep(500 * time.Millisecond)
 			return StartGameMultiAttack(nick, desc, coords, target)
 		} else if res.StatusCode == http.StatusTooManyRequests {
-			time.Sleep(300 + time.Millisecond)
+			time.Sleep(500 * time.Millisecond)
 			return StartGameMultiAttack(nick, desc, coords, target)
 		} else {
 			log.Panicln(res.Status)
@@ -151,10 +163,10 @@ func StartGameMultiLobby(nick string, desc string, coords []string) string {
 
 	if res.StatusCode != http.StatusOK {
 		if res.StatusCode == http.StatusServiceUnavailable {
-			time.Sleep(300 + time.Millisecond)
+			time.Sleep(500 * time.Millisecond)
 			return StartGameMultiLobby(nick, desc, coords)
 		} else if res.StatusCode == http.StatusTooManyRequests {
-			time.Sleep(300 + time.Millisecond)
+			time.Sleep(500 * time.Millisecond)
 			return StartGameMultiLobby(nick, desc, coords)
 		} else {
 			log.Panicln(res.Status)
@@ -181,10 +193,10 @@ func GetOpponentInfo(authKey string) []string {
 
 	if res.StatusCode != http.StatusOK {
 		if res.StatusCode == http.StatusServiceUnavailable {
-			time.Sleep(500 + time.Millisecond)
+			time.Sleep(500 * time.Millisecond)
 			return GetOpponentInfo(authKey)
 		} else if res.StatusCode == http.StatusTooManyRequests {
-			time.Sleep(500 + time.Millisecond)
+			time.Sleep(500 * time.Millisecond)
 			return GetOpponentInfo(authKey)
 		} else {
 			log.Panicln(res.Status)
@@ -203,7 +215,7 @@ func GetOpponentInfo(authKey string) []string {
 	}
 
 	if data.Opponent == "" {
-		time.Sleep(500 + time.Millisecond)
+		time.Sleep(500 * time.Millisecond)
 		return GetOpponentInfo(authKey)
 	}
 
@@ -230,10 +242,10 @@ func GetStatus(authKey string) Status {
 
 	if res.StatusCode != http.StatusOK {
 		if res.StatusCode == http.StatusServiceUnavailable {
-			time.Sleep(500 + time.Millisecond)
+			time.Sleep(500 * time.Millisecond)
 			return GetStatus(authKey)
 		} else if res.StatusCode == http.StatusTooManyRequests {
-			time.Sleep(500 + time.Millisecond)
+			time.Sleep(500 * time.Millisecond)
 			return GetStatus(authKey)
 		} else {
 			log.Panicln(res.Status)
@@ -278,10 +290,10 @@ func PostFire(cord string, authKey string) string {
 	if res.StatusCode != http.StatusOK {
 		if res.StatusCode != http.StatusOK {
 			if res.StatusCode == http.StatusServiceUnavailable {
-				time.Sleep(500 + time.Millisecond)
+				time.Sleep(500 * time.Millisecond)
 				return PostFire(cord, authKey)
 			} else if res.StatusCode == http.StatusTooManyRequests {
-				time.Sleep(500 + time.Millisecond)
+				time.Sleep(500 * time.Millisecond)
 				return PostFire(cord, authKey)
 			} else {
 				log.Panicln(res.Status)
@@ -324,10 +336,10 @@ func GetBoard(authKey string) []string {
 
 	if res.StatusCode != http.StatusOK {
 		if res.StatusCode == http.StatusServiceUnavailable {
-			time.Sleep(300 + time.Millisecond)
+			time.Sleep(500 * time.Millisecond)
 			return GetBoard(authKey)
 		} else if res.StatusCode == http.StatusTooManyRequests {
-			time.Sleep(1 + time.Second)
+			time.Sleep(500 * time.Millisecond)
 			return GetBoard(authKey)
 		} else {
 			log.Panicln(res.Status)
@@ -370,7 +382,7 @@ func GetLobby() LobbyInfo {
 			time.Sleep(500 + time.Millisecond)
 			return GetLobby()
 		} else if res.StatusCode == http.StatusTooManyRequests {
-			time.Sleep(1 + time.Second)
+			time.Sleep(500 * time.Millisecond)
 			return GetLobby()
 		} else {
 			log.Panicln(res.Status)
@@ -409,10 +421,10 @@ func DeleteSurrender(authKey string) bool {
 
 	if res.StatusCode != http.StatusOK {
 		if res.StatusCode == http.StatusServiceUnavailable {
-			time.Sleep(500 + time.Millisecond)
+			time.Sleep(500 * time.Millisecond)
 			return DeleteSurrender(authKey)
 		} else if res.StatusCode == http.StatusTooManyRequests {
-			time.Sleep(1 + time.Second)
+			time.Sleep(500 * time.Millisecond)
 			return DeleteSurrender(authKey)
 		} else {
 			log.Panicln(res.Status)
@@ -439,13 +451,53 @@ func GetRefresh(authKey string) {
 
 	if res.StatusCode != http.StatusOK {
 		if res.StatusCode == http.StatusServiceUnavailable {
-			time.Sleep(1 + time.Second)
+			time.Sleep(500 * time.Millisecond)
 			GetRefresh(authKey)
 		} else if res.StatusCode == http.StatusTooManyRequests {
-			time.Sleep(1 + time.Second)
+			time.Sleep(500 * time.Millisecond)
 			GetRefresh(authKey)
 		} else {
 			log.Panicln(res.Status)
 		}
 	}
+}
+
+func GetStats() []PlayerStats {
+	geturl := "https://go-pjatk-server.fly.dev/api/stats"
+
+	r, err := http.NewRequest("GET", geturl, nil)
+	if err != nil {
+		panic(err)
+	}
+
+	client := &http.Client{}
+	res, err := client.Do(r)
+	if err != nil {
+		panic(err)
+	}
+
+	if res.StatusCode != http.StatusOK {
+		if res.StatusCode == http.StatusServiceUnavailable {
+			time.Sleep(500 + time.Millisecond)
+			return GetStats()
+		} else if res.StatusCode == http.StatusTooManyRequests {
+			time.Sleep(500 * time.Millisecond)
+			return GetStats()
+		} else {
+			log.Panicln(res.Status)
+		}
+	}
+
+	resBody, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	var stats Stats
+	err = json.Unmarshal(resBody, &stats)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	return stats.Stats
 }
