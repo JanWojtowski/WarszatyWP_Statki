@@ -34,254 +34,48 @@ func BoardBuilder(game ShipsGame) {
 		var shipsTab []string
 		for {
 			char := board.Listen(context.TODO())
-			if len(shipsTab) < 4 {
-				if len(currentShip) == 0 {
-					if canPlaceNewShip(char, shipsTab) {
-						currentShip = append(currentShip, char)
-						shipsTab = append(shipsTab, char)
-					} else {
-						mis.SetText("To close to another ships")
-					}
-				} else {
-					if !checkSides(char, shipsWithoutCurrent(shipsTab, currentShip)) {
-						if checkSides(char, currentShip) {
-							currentShip = append(currentShip, char)
-							shipsTab = append(shipsTab, char)
-						} else {
-							mis.SetText("Ship parts edges must be connected")
-						}
-					} else {
-						mis.SetText("To close to another ship")
-					}
-				}
-			} else if len(shipsTab) < 7 {
-				if len(shipsTab) == 4 {
-					currentShip = []string{}
-					txt.SetText("1st 3pcs ship")
-				}
-				if len(currentShip) == 0 {
-					if canPlaceNewShip(char, shipsTab) {
-						currentShip = append(currentShip, char)
-						shipsTab = append(shipsTab, char)
-					} else {
-						mis.SetText("To close to another ships")
-					}
-				} else {
-					if !checkSides(char, shipsWithoutCurrent(shipsTab, currentShip)) {
-						if checkSides(char, currentShip) {
-							currentShip = append(currentShip, char)
-							shipsTab = append(shipsTab, char)
-						} else {
-							mis.SetText("Ship parts edges must be connected")
-						}
-					} else {
-						mis.SetText("To close to another ship")
-					}
-				}
-			} else if len(shipsTab) < 10 {
-				if len(shipsTab) == 7 {
-					currentShip = []string{}
-					txt.SetText("2nd 3pcs ship")
-				}
-				if len(currentShip) == 0 {
-					if canPlaceNewShip(char, shipsTab) {
-						currentShip = append(currentShip, char)
-						shipsTab = append(shipsTab, char)
-					} else {
-						mis.SetText("To close to another ships")
-					}
-				} else {
-					if !checkSides(char, shipsWithoutCurrent(shipsTab, currentShip)) {
-						if checkSides(char, currentShip) {
-							currentShip = append(currentShip, char)
-							shipsTab = append(shipsTab, char)
-						} else {
-							mis.SetText("Ship parts edges must be connected")
-						}
-					} else {
-						mis.SetText("To close to another ship")
-					}
-				}
-			} else if len(shipsTab) < 12 {
-				if len(shipsTab) == 10 {
-					currentShip = []string{}
-					txt.SetText("1st 2pcs ship")
-				}
-				if len(currentShip) == 0 {
-					if canPlaceNewShip(char, shipsTab) {
-						currentShip = append(currentShip, char)
-						shipsTab = append(shipsTab, char)
-					} else {
-						mis.SetText("To close to another ships")
-					}
-				} else {
-					if !checkSides(char, shipsWithoutCurrent(shipsTab, currentShip)) {
-						if checkSides(char, currentShip) {
-							currentShip = append(currentShip, char)
-							shipsTab = append(shipsTab, char)
-						} else {
-							mis.SetText("Ship parts edges must be connected")
-						}
-					} else {
-						mis.SetText("To close to another ship")
-					}
-				}
-			} else if len(shipsTab) < 14 {
-				if len(shipsTab) == 12 {
-					currentShip = []string{}
-					txt.SetText("2nd 2pcs ship")
-				}
-				if len(currentShip) == 0 {
-					if canPlaceNewShip(char, shipsTab) {
-						currentShip = append(currentShip, char)
-						shipsTab = append(shipsTab, char)
-					} else {
-						mis.SetText("To close to another ships")
-					}
-				} else {
-					if !checkSides(char, shipsWithoutCurrent(shipsTab, currentShip)) {
-						if checkSides(char, currentShip) {
-							currentShip = append(currentShip, char)
-							shipsTab = append(shipsTab, char)
-						} else {
-							mis.SetText("Ship parts edges must be connected")
-						}
-					} else {
-						mis.SetText("To close to another ship")
-					}
-				}
-			} else if len(shipsTab) < 16 {
-				if len(shipsTab) == 14 {
-					currentShip = []string{}
-					txt.SetText("3rd 2pcs ship")
-				}
-				if len(currentShip) == 0 {
-					if canPlaceNewShip(char, shipsTab) {
-						currentShip = append(currentShip, char)
-						shipsTab = append(shipsTab, char)
-					} else {
-						mis.SetText("To close to another ships")
-					}
-				} else {
-					if !checkSides(char, shipsWithoutCurrent(shipsTab, currentShip)) {
-						if checkSides(char, currentShip) {
-							currentShip = append(currentShip, char)
-							shipsTab = append(shipsTab, char)
-						} else {
-							mis.SetText("Ship parts edges must be connected")
-						}
-					} else {
-						mis.SetText("To close to another ship")
-					}
-				}
-			} else if len(shipsTab) < 17 {
-				if len(shipsTab) == 16 {
-					currentShip = []string{}
-					txt.SetText("1st 1pcs ship")
-				}
-				if len(currentShip) == 0 {
-					if canPlaceNewShip(char, shipsTab) {
-						currentShip = append(currentShip, char)
-						shipsTab = append(shipsTab, char)
-					} else {
-						mis.SetText("To close to another ships")
-					}
-				} else {
-					if !checkSides(char, shipsWithoutCurrent(shipsTab, currentShip)) {
-						if checkSides(char, currentShip) {
-							currentShip = append(currentShip, char)
-							shipsTab = append(shipsTab, char)
-						} else {
-							mis.SetText("Ship parts edges must be connected")
-						}
-					} else {
-						mis.SetText("To close to another ship")
-					}
-				}
-			} else if len(shipsTab) < 18 {
-				if len(shipsTab) == 17 {
-					currentShip = []string{}
-					txt.SetText("2nd 1pcs ship")
-				}
-				if len(currentShip) == 0 {
-					if canPlaceNewShip(char, shipsTab) {
-						currentShip = append(currentShip, char)
-						shipsTab = append(shipsTab, char)
-					} else {
-						mis.SetText("To close to another ships")
-					}
-				} else {
-					if !checkSides(char, shipsWithoutCurrent(shipsTab, currentShip)) {
-						if checkSides(char, currentShip) {
-							currentShip = append(currentShip, char)
-							shipsTab = append(shipsTab, char)
-						} else {
-							mis.SetText("Ship parts edges must be connected")
-						}
-					} else {
-						mis.SetText("To close to another ship")
-					}
-				}
-			} else if len(shipsTab) < 19 {
-				if len(shipsTab) == 18 {
-					currentShip = []string{}
-					txt.SetText("3rd 1pcs ship")
-				}
-				if len(currentShip) == 0 {
-					if canPlaceNewShip(char, shipsTab) {
-						currentShip = append(currentShip, char)
-						shipsTab = append(shipsTab, char)
-					} else {
-						mis.SetText("To close to another ships")
-					}
-				} else {
-					if !checkSides(char, shipsWithoutCurrent(shipsTab, currentShip)) {
-						if checkSides(char, currentShip) {
-							currentShip = append(currentShip, char)
-							shipsTab = append(shipsTab, char)
-						} else {
-							mis.SetText("Ship parts edges must be connected")
-						}
-					} else {
-						mis.SetText("To close to another ship")
-					}
-				}
-			} else if len(shipsTab) < 20 {
-				if len(shipsTab) == 19 {
-					currentShip = []string{}
-					txt.SetText("4st 1pcs ship")
-				}
-				if len(currentShip) == 0 {
-					if canPlaceNewShip(char, shipsTab) {
-						currentShip = append(currentShip, char)
-						shipsTab = append(shipsTab, char)
+			shipPlacer(char, &currentShip, &shipsTab, mis)
 
-						ui.Remove(line1)
-						ui.Remove(line2)
-						ui.Remove(line3)
-						ui.Remove(txt)
-						ui.Remove(mis)
-						ui.Remove(board)
+			switch len(shipsTab) {
+			case 4:
+				currentShip = []string{}
+				txt.SetText("1st 3pcs ship")
+			case 7:
+				currentShip = []string{}
+				txt.SetText("2nd 3pcs ship")
+			case 10:
+				currentShip = []string{}
+				txt.SetText("1st 2pcs ship")
+			case 12:
+				currentShip = []string{}
+				txt.SetText("2nd 2pcs ship")
+			case 14:
+				currentShip = []string{}
+				txt.SetText("3rd 2pcs ship")
+			case 16:
+				currentShip = []string{}
+				txt.SetText("1st 1pcs ship")
+			case 17:
+				currentShip = []string{}
+				txt.SetText("2nd 1pcs ship")
+			case 18:
+				currentShip = []string{}
+				txt.SetText("3rd 1pcs ship")
+			case 19:
+				currentShip = []string{}
+				txt.SetText("4st 1pcs ship")
+			case 20:
+				ui.Remove(line1)
+				ui.Remove(line2)
+				ui.Remove(line3)
+				ui.Remove(txt)
+				ui.Remove(mis)
+				ui.Remove(board)
 
-						game.PlayerInfo.ownBoard = true
-						game.PlayerInfo.coords = shipsTab
+				game.PlayerInfo.ownBoard = true
+				game.PlayerInfo.coords = shipsTab
 
-						gameModeSelect(game)
-					} else {
-						mis.SetText("To close to another ships")
-					}
-				} else {
-					if !checkSides(char, shipsWithoutCurrent(shipsTab, currentShip)) {
-						if checkSides(char, currentShip) {
-							currentShip = append(currentShip, char)
-							shipsTab = append(shipsTab, char)
-						} else {
-							mis.SetText("Ship parts edges must be connected")
-						}
-					} else {
-						mis.SetText("To close to another ship")
-					}
-				}
+				gameModeSelect(game)
 			}
 
 			states := [10][10]gui.State{}
@@ -289,9 +83,38 @@ func BoardBuilder(game ShipsGame) {
 				numbers := cordToNumbers(ply)
 				states[numbers[0]][numbers[1]] = gui.Ship
 			}
+			paintSides(currentShip, &states, gui.Sunk)
+			paintSides(shipsWithoutCurrent(shipsTab, currentShip), &states, gui.Hit)
+			paintSlants(shipsWithoutCurrent(shipsTab, currentShip), &states, gui.Hit)
 			board.SetStates(states)
 		}
 	}()
+}
+
+func shipPlacer(char string, currentShip *[]string, shipsTab *[]string, mis *gui.Text) {
+	if !stringInSlice(char, *shipsTab) {
+		if len(*currentShip) == 0 {
+			if canPlaceNewShip(char, *shipsTab) {
+				*currentShip = append(*currentShip, char)
+				*shipsTab = append(*shipsTab, char)
+			} else {
+				mis.SetText("To close to another ships")
+			}
+		} else {
+			if !checkSides(char, shipsWithoutCurrent(*shipsTab, *currentShip)) {
+				if checkSides(char, *currentShip) {
+					*currentShip = append(*currentShip, char)
+					*shipsTab = append(*shipsTab, char)
+				} else {
+					mis.SetText("Ship parts edges must be connected!")
+				}
+			} else {
+				mis.SetText("To close to another ship!")
+			}
+		}
+	} else {
+		mis.SetText("You already placed ship here!")
+	}
 }
 
 func canPlaceNewShip(char string, ships []string) bool {
@@ -448,4 +271,111 @@ func shipsWithoutCurrent(ships []string, current []string) []string {
 		}
 	}
 	return temp
+}
+
+func paintSides(ships []string, shipsState *[10][10]gui.State, state gui.State) {
+	for _, ship := range ships {
+		coords := cordToNumbers(ship)
+
+		if coords[0] > 0 && coords[0] < 9 {
+			if shipsState[coords[0]+1][coords[1]] != gui.Ship {
+				shipsState[coords[0]+1][coords[1]] = state
+			}
+			if shipsState[coords[0]-1][coords[1]] != gui.Ship {
+				shipsState[coords[0]-1][coords[1]] = state
+			}
+		} else if coords[0] == 0 {
+			if shipsState[coords[0]+1][coords[1]] != gui.Ship {
+				shipsState[coords[0]+1][coords[1]] = state
+			}
+		} else if coords[0] == 9 {
+			if shipsState[coords[0]-1][coords[1]] != gui.Ship {
+				shipsState[coords[0]-1][coords[1]] = state
+			}
+		}
+
+		if coords[1] > 0 && coords[1] < 9 {
+			if shipsState[coords[0]][coords[1]+1] != gui.Ship {
+				shipsState[coords[0]][coords[1]+1] = state
+			}
+			if shipsState[coords[0]][coords[1]-1] != gui.Ship {
+				shipsState[coords[0]][coords[1]-1] = state
+			}
+		} else if coords[1] == 0 {
+			if shipsState[coords[0]][coords[1]+1] != gui.Ship {
+				shipsState[coords[0]][coords[1]+1] = state
+			}
+		} else if coords[1] == 9 {
+			if shipsState[coords[0]][coords[1]-1] != gui.Ship {
+				shipsState[coords[0]][coords[1]-1] = state
+			}
+		}
+	}
+}
+
+func paintSlants(ships []string, shipsState *[10][10]gui.State, state gui.State) {
+	for _, ship := range ships {
+		coords := cordToNumbers(ship)
+
+		if coords[0] > 0 && coords[1] > 0 && coords[0] < 9 && coords[1] < 9 {
+			if shipsState[coords[0]+1][coords[1]+1] != gui.Ship {
+				shipsState[coords[0]+1][coords[1]+1] = state
+			}
+			if shipsState[coords[0]+1][coords[1]-1] != gui.Ship {
+				shipsState[coords[0]+1][coords[1]-1] = state
+			}
+			if shipsState[coords[0]-1][coords[1]+1] != gui.Ship {
+				shipsState[coords[0]-1][coords[1]+1] = state
+			}
+			if shipsState[coords[0]-1][coords[1]-1] != gui.Ship {
+				shipsState[coords[0]-1][coords[1]-1] = state
+			}
+
+		} else if coords[0] == 0 && coords[1] == 0 {
+			if shipsState[coords[0]+1][coords[1]+1] != gui.Ship {
+				shipsState[coords[0]+1][coords[1]+1] = state
+			}
+		} else if coords[0] == 9 && coords[1] == 9 {
+			if shipsState[coords[0]-1][coords[1]-1] != gui.Ship {
+				shipsState[coords[0]-1][coords[1]-1] = state
+			}
+		} else if coords[0] == 0 && coords[1] == 9 {
+			if shipsState[coords[0]+1][coords[1]-1] != gui.Ship {
+				shipsState[coords[0]+1][coords[1]-1] = state
+			}
+		} else if coords[0] == 9 && coords[1] == 0 {
+			if shipsState[coords[0]-1][coords[1]+1] != gui.Ship {
+				shipsState[coords[0]-1][coords[1]+1] = state
+			}
+		} else if coords[0] == 0 && coords[1] > 0 && coords[1] < 9 {
+			if shipsState[coords[0]+1][coords[1]+1] != gui.Ship {
+				shipsState[coords[0]+1][coords[1]+1] = state
+			}
+			if shipsState[coords[0]+1][coords[1]-1] != gui.Ship {
+				shipsState[coords[0]+1][coords[1]-1] = state
+			}
+		} else if coords[0] == 9 && coords[1] > 0 && coords[1] < 9 {
+			if shipsState[coords[0]-1][coords[1]+1] != gui.Ship {
+				shipsState[coords[0]-1][coords[1]+1] = state
+			}
+			if shipsState[coords[0]-1][coords[1]-1] != gui.Ship {
+				shipsState[coords[0]-1][coords[1]-1] = state
+			}
+		} else if coords[1] == 0 && coords[0] > 0 && coords[0] < 9 {
+			if shipsState[coords[0]+1][coords[1]+1] != gui.Ship {
+				shipsState[coords[0]+1][coords[1]+1] = state
+			}
+			if shipsState[coords[0]-1][coords[1]+1] != gui.Ship {
+				shipsState[coords[0]-1][coords[1]+1] = state
+			}
+		} else if coords[1] == 9 && coords[0] > 0 && coords[0] < 9 {
+			if shipsState[coords[0]+1][coords[1]-1] != gui.Ship {
+				shipsState[coords[0]+1][coords[1]-1] = state
+			}
+			if shipsState[coords[0]-1][coords[1]-1] != gui.Ship {
+				shipsState[coords[0]-1][coords[1]-1] = state
+			}
+
+		}
+	}
 }

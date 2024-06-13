@@ -19,6 +19,7 @@ type PlayerInfo struct {
 	coords     []string
 	hitCoords  []string
 	missCoords []string
+	sunkCoords []string
 }
 
 type OpponentInfo struct {
@@ -86,44 +87,19 @@ func StartGame(game ShipsGame, gameMode string, opponent string) {
 	}
 
 	go func() {
-		totalShots := 0
-		hits := 0
 		for {
 			char := opponentBoard.Listen(context.TODO())
 			if canFire(gameInfo.AuthToken) {
 				fireResult := fire(char, gameInfo.AuthToken, &playerInfo)
 				txt.SetText(fmt.Sprintf("Fired at Coordinates: %s. %s!!!", char, fireResult))
-				totalShots++
-				if fireResult == "hit" {
-					hits++
+				plyAccuracy.SetText(fmt.Sprintf(
+					"%d%%", int(math.Round(float64(len(playerInfo.hitCoords))/float64(len(playerInfo.hitCoords)+
+						len(playerInfo.missCoords))*float64(100))),
+				))
+				if fireResult == "SUNKEN" {
+					sunkShip(char, playerInfo.hitCoords, &playerInfo.sunkCoords)
 				}
-				plyAccuracy.SetText(fmt.Sprintf("%d%%", int(math.Round(float64(hits)/float64(totalShots)*float64(100)))))
 				boardsUpdater(gameInfo.AuthToken, playerInfo, playerBoard, opponentBoard)
-				if len(playerInfo.hitCoords) == 20 {
-					ui.Remove(plyAccuracy)
-					ui.Remove(txt)
-					ui.Remove(timer)
-					ui.Remove(turn)
-					ui.Remove(opponentBoard)
-					ui.Remove(playerBoard)
-					ui.Remove(opponentNick)
-					ui.Remove(playerNick)
-					game.Level.RemoveEntity(surrenderButton)
-					game.Level.RemoveEntity(sur)
-					for _, element := range opponentDesc {
-						ui.Remove(&element)
-					}
-					for _, element := range playerDesc {
-						ui.Remove(&element)
-					}
-					res := gui.NewText(50, 20, "", nil)
-					res.SetText("You Won!!! :D")
-					ui.Draw(res)
-					time.Sleep(5 * time.Second)
-					ui.Remove(res)
-					MainMenu(game)
-					return
-				}
 			} else {
 				txt.SetText("Wait for your turn!")
 			}
@@ -167,29 +143,10 @@ func StartGame(game ShipsGame, gameMode string, opponent string) {
 			}
 			if status.Timer == 1 {
 				time.Sleep(1 * time.Second)
-				ui.Remove(plyAccuracy)
-				ui.Remove(txt)
-				ui.Remove(timer)
-				ui.Remove(turn)
-				ui.Remove(opponentBoard)
-				ui.Remove(playerBoard)
-				ui.Remove(opponentNick)
-				ui.Remove(playerNick)
-				game.Level.RemoveEntity(surrenderButton)
-				game.Level.RemoveEntity(sur)
-				for _, element := range opponentDesc {
-					ui.Remove(&element)
-				}
-				for _, element := range playerDesc {
-					ui.Remove(&element)
-				}
-				res := gui.NewText(50, 20, "", nil)
-				res.SetText("You Lose!!! :(")
-				ui.Draw(res)
-				time.Sleep(5 * time.Second)
-				ui.Remove(res)
-				MainMenu(game)
-				return
+				status.GameStatus = "ended"
+			}
+			if len(playerInfo.hitCoords) == 20 {
+				status.GameStatus = "ended"
 			}
 			if status.GameStatus == "ended" {
 				ui.Remove(plyAccuracy)
@@ -291,7 +248,7 @@ func playerBoardStatusUpdate(board *gui.Board, plyCords []string, oppCords []str
 	board.SetStates(states)
 }
 
-func opponentBoardStatusUpdate(board *gui.Board, hitCords []string, missCords []string) {
+func opponentBoardStatusUpdate(board *gui.Board, hitCords []string, missCords []string, sunkCords []string) {
 	states := [10][10]gui.State{}
 	for _, hit := range hitCords {
 		numbers := cordToNumbers(hit)
@@ -300,6 +257,10 @@ func opponentBoardStatusUpdate(board *gui.Board, hitCords []string, missCords []
 	for _, miss := range missCords {
 		numbers := cordToNumbers(miss)
 		states[numbers[0]][numbers[1]] = gui.Miss
+	}
+	for _, sunk := range sunkCords {
+		numbers := cordToNumbers(sunk)
+		states[numbers[0]][numbers[1]] = gui.Sunk
 	}
 	board.SetStates(states)
 }
@@ -316,7 +277,7 @@ func stringInSlice(a string, list []string) bool {
 func boardsUpdater(authKey string, playerInfo PlayerInfo, plyBoard *gui.Board, oppBoard *gui.Board) httpClient.Status {
 	status := httpClient.GetStatus(authKey)
 	playerBoardStatusUpdate(plyBoard, playerInfo.coords, status.OppShots)
-	opponentBoardStatusUpdate(oppBoard, playerInfo.hitCoords, playerInfo.missCoords)
+	opponentBoardStatusUpdate(oppBoard, playerInfo.hitCoords, playerInfo.missCoords, playerInfo.sunkCoords)
 	return status
 }
 
@@ -366,4 +327,50 @@ func descriptionFormater(x, y, maxlinelength int, desc string) []gui.Text {
 	}
 
 	return texts
+}
+
+func sunkShip(coords string, hitsTab []string, sunkTab *[]string) {
+	thisCoord := cordToNumbers(coords)
+	for _, hit := range hitsTab {
+		if stringInSlice(hit, *sunkTab) {
+			return
+		} else {
+			*sunkTab = append(*sunkTab, hit)
+		}
+		hitcoords := cordToNumbers(hit)
+
+		if coords[0] > 0 && coords[0] < 9 {
+			if thisCoord[0]+1 == hitcoords[0] && thisCoord[1] == hitcoords[1] {
+				sunkShip(hit, hitsTab, sunkTab)
+			}
+			if thisCoord[0]-1 == hitcoords[0] && thisCoord[1] == hitcoords[1] {
+				sunkShip(hit, hitsTab, sunkTab)
+			}
+		} else if coords[0] == 0 {
+			if thisCoord[0]+1 == hitcoords[0] && thisCoord[1] == hitcoords[1] {
+				sunkShip(hit, hitsTab, sunkTab)
+			}
+		} else if coords[0] == 9 {
+			if thisCoord[0]-1 == hitcoords[0] && thisCoord[1] == hitcoords[1] {
+				sunkShip(hit, hitsTab, sunkTab)
+			}
+		}
+
+		if coords[1] > 0 && coords[1] < 9 {
+			if thisCoord[0] == hitcoords[0] && thisCoord[1]+1 == hitcoords[1] {
+				sunkShip(hit, hitsTab, sunkTab)
+			}
+			if thisCoord[0] == hitcoords[0] && thisCoord[1]-1 == hitcoords[1] {
+				sunkShip(hit, hitsTab, sunkTab)
+			}
+		} else if coords[1] == 0 {
+			if thisCoord[0] == hitcoords[0] && thisCoord[1]+1 == hitcoords[1] {
+				sunkShip(hit, hitsTab, sunkTab)
+			}
+		} else if coords[1] == 9 {
+			if thisCoord[0] == hitcoords[0] && thisCoord[1]-1 == hitcoords[1] {
+				sunkShip(hit, hitsTab, sunkTab)
+			}
+		}
+	}
 }
