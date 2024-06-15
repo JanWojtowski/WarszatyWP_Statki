@@ -86,6 +86,8 @@ func StartGame(game ShipsGame, gameMode string, opponent string) {
 		ui.Draw(&element)
 	}
 
+	surrender := false
+
 	go func() {
 		for {
 			char := opponentBoard.Listen(context.TODO())
@@ -97,6 +99,7 @@ func StartGame(game ShipsGame, gameMode string, opponent string) {
 						len(playerInfo.missCoords))*float64(100))),
 				))
 				if fireResult == "SUNKEN" {
+					playerInfo.sunkCoords = append(playerInfo.sunkCoords, char)
 					sunkShip(char, playerInfo.hitCoords, &playerInfo.sunkCoords)
 				}
 				boardsUpdater(gameInfo.AuthToken, playerInfo, playerBoard, opponentBoard)
@@ -110,23 +113,7 @@ func StartGame(game ShipsGame, gameMode string, opponent string) {
 		for {
 			char := surrenderButton.Listen(context.TODO())
 			if char == "surrender" {
-				httpClient.DeleteSurrender(gameInfo.AuthToken)
-				ui.Remove(plyAccuracy)
-				ui.Remove(txt)
-				ui.Remove(timer)
-				ui.Remove(turn)
-				ui.Remove(opponentBoard)
-				ui.Remove(playerBoard)
-				ui.Remove(opponentNick)
-				ui.Remove(playerNick)
-				for _, element := range opponentDesc {
-					ui.Remove(&element)
-				}
-				for _, element := range playerDesc {
-					ui.Remove(&element)
-				}
-				MainMenu(game)
-				return
+				surrender = true
 			}
 		}
 	}()
@@ -146,6 +133,9 @@ func StartGame(game ShipsGame, gameMode string, opponent string) {
 				status.GameStatus = "ended"
 			}
 			if len(playerInfo.hitCoords) == 20 {
+				status.GameStatus = "ended"
+			}
+			if surrender {
 				status.GameStatus = "ended"
 			}
 			if status.GameStatus == "ended" {
@@ -331,44 +321,49 @@ func descriptionFormater(x, y, maxlinelength int, desc string) []gui.Text {
 
 func sunkShip(coords string, hitsTab []string, sunkTab *[]string) {
 	thisCoord := cordToNumbers(coords)
-	for _, hit := range hitsTab {
-		if stringInSlice(hit, *sunkTab) {
-			return
-		} else {
-			*sunkTab = append(*sunkTab, hit)
-		}
+
+	for _, hit := range shipsWithoutCurrent(hitsTab, *sunkTab) {
+
 		hitcoords := cordToNumbers(hit)
 
-		if coords[0] > 0 && coords[0] < 9 {
+		if thisCoord[0] > 0 && thisCoord[0] < 9 {
 			if thisCoord[0]+1 == hitcoords[0] && thisCoord[1] == hitcoords[1] {
+				*sunkTab = append(*sunkTab, hit)
 				sunkShip(hit, hitsTab, sunkTab)
 			}
 			if thisCoord[0]-1 == hitcoords[0] && thisCoord[1] == hitcoords[1] {
+				*sunkTab = append(*sunkTab, hit)
 				sunkShip(hit, hitsTab, sunkTab)
 			}
-		} else if coords[0] == 0 {
+		} else if thisCoord[0] == 0 {
 			if thisCoord[0]+1 == hitcoords[0] && thisCoord[1] == hitcoords[1] {
+				*sunkTab = append(*sunkTab, hit)
 				sunkShip(hit, hitsTab, sunkTab)
 			}
-		} else if coords[0] == 9 {
+		} else if thisCoord[0] == 9 {
 			if thisCoord[0]-1 == hitcoords[0] && thisCoord[1] == hitcoords[1] {
+				*sunkTab = append(*sunkTab, hit)
 				sunkShip(hit, hitsTab, sunkTab)
 			}
 		}
 
-		if coords[1] > 0 && coords[1] < 9 {
+		if thisCoord[1] > 0 && thisCoord[1] < 9 {
 			if thisCoord[0] == hitcoords[0] && thisCoord[1]+1 == hitcoords[1] {
+				*sunkTab = append(*sunkTab, hit)
 				sunkShip(hit, hitsTab, sunkTab)
 			}
 			if thisCoord[0] == hitcoords[0] && thisCoord[1]-1 == hitcoords[1] {
+				*sunkTab = append(*sunkTab, hit)
 				sunkShip(hit, hitsTab, sunkTab)
 			}
-		} else if coords[1] == 0 {
+		} else if thisCoord[1] == 0 {
 			if thisCoord[0] == hitcoords[0] && thisCoord[1]+1 == hitcoords[1] {
+				*sunkTab = append(*sunkTab, hit)
 				sunkShip(hit, hitsTab, sunkTab)
 			}
-		} else if coords[1] == 9 {
+		} else if thisCoord[1] == 9 {
 			if thisCoord[0] == hitcoords[0] && thisCoord[1]-1 == hitcoords[1] {
+				*sunkTab = append(*sunkTab, hit)
 				sunkShip(hit, hitsTab, sunkTab)
 			}
 		}
